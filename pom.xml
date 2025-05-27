@@ -11,12 +11,29 @@
 		<relativePath /> <!-- lookup parent from repository -->
 	</parent>
 
-    <groupId>com.rah.demo</groupId>
-    <artifactId>micro-product</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+	<groupId>com.rah.demo</groupId>
+	<artifactId>micro-product</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
 
 	<properties>
 		<java.version>17</java.version>
+		
+		<!-- Propiedades para SonarQube -->
+		<!-- Estas propiedades pueden ser sobrescritas por los parámetros -D pasados por Jenkins -->
+		<!-- Es bueno tenerlas aquí para análisis local y documentación. -->
+		<!-- Usaremos el nombre del contenedor como base para el projectKey, según el Jenkinsfile. -->
+		<sonar.projectKey>product_app_2025</sonar.projectKey> 
+		<sonar.projectName>product_app_2025 (Micro Product)</sonar.projectName>
+		<!-- sonar.host.url y sonar.login serán pasados por Jenkins -->
+		
+		<!-- Propiedad para que SonarQube encuentre el reporte de cobertura de JaCoCo -->
+		<!-- La ruta ${project.build.directory} se resuelve a 'target/' durante la ejecución de Maven -->
+		<sonar.coverage.jacoco.xmlReportPaths>${project.build.directory}/site/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
+		
+		<!-- Opcional: Definir explícitamente las rutas de fuentes y tests si es necesario -->
+		<!-- <sonar.sources>src/main/java</sonar.sources> -->
+		<!-- <sonar.tests>src/test/java</sonar.tests> -->
+		<!-- <sonar.java.binaries>${project.build.outputDirectory}</sonar.java.binaries> -->
 	</properties>
 
 	<dependencies>
@@ -33,24 +50,28 @@
 			<artifactId>spring-boot-starter-data-jpa</artifactId>
 		</dependency>
 
-		<!-- https://springdoc.org/#Introduction -->
-		<!-- https://mvnrepository.com/artifact/org.springdoc/springdoc-openapi-ui -->
-				<dependency>
+		<!-- SpringDoc OpenAPI para Swagger UI -->
+		<dependency>
 			<groupId>org.springdoc</groupId>
 			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
 			<version>2.3.0</version>
 		</dependency>
 
+		<!-- Base de datos H2 en memoria -->
 		<dependency>
 			<groupId>com.h2database</groupId>
 			<artifactId>h2</artifactId>
 			<scope>runtime</scope>
 		</dependency>
+		
+		<!-- Lombok -->
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
 			<optional>true</optional>
 		</dependency>
+		
+		<!-- Spring Boot Starter Test para pruebas unitarias y de integración -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
@@ -60,6 +81,7 @@
 
 	<build>
 		<plugins>
+			<!-- 1. Spring Boot Maven Plugin (para crear el JAR ejecutable) -->
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
@@ -72,11 +94,12 @@
 					</excludes>
 				</configuration>
 			</plugin>
+
+			<!-- 2. JaCoCo Maven Plugin (para cobertura de código) -->
 			<plugin>
-				<!-- https://mvnrepository.com/artifact/org.jacoco/jacoco-maven-plugin -->
 				<groupId>org.jacoco</groupId>
 				<artifactId>jacoco-maven-plugin</artifactId>
-				<version>0.8.8</version>
+				<version>0.8.12</version> <!-- Versión actualizada de JaCoCo -->
 				<executions>
 					<execution>
 						<id>prepare-agent</id>
@@ -86,19 +109,28 @@
 					</execution>
 					<execution>
 						<id>report</id>
+						<phase>prepare-package</phase> <!-- Generar reporte antes de empaquetar -->
 						<goals>
 							<goal>report</goal>
 						</goals>
 						<configuration>
 							<formats>
-								<format>XML</format>
+								<format>XML</format> <!-- Formato que SonarQube puede leer -->
 							</formats>
 						</configuration>
 					</execution>
 				</executions>
 			</plugin>
+
+			<!-- 3. SonarQube Scanner for Maven -->
+			<plugin>
+				<groupId>org.sonarsource.scanner.maven</groupId>
+				<artifactId>sonar-maven-plugin</artifactId>
+				<version>3.11.0.3922</version> 
+			</plugin>
 		</plugins>
 	</build>
+
 	<repositories>
 		<repository>
 			<id>spring-milestones</id>
